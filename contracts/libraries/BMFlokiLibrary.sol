@@ -72,8 +72,8 @@ library BMFlokiLibrary {
         uint256 reserveA,
         uint256 reserveB
     ) internal pure returns (uint256 amountB) {
-        require(amountA > 0, 'BMFlokiV2Library: INSUFFICIENT_AMOUNT');
-        require(reserveA > 0 && reserveB > 0, 'BMFlokiV2Library: INSUFFICIENT_LIQUIDITY');
+        require(amountA > 0, 'BMFlokiLibrary: INSUFFICIENT_AMOUNT');
+        require(reserveA > 0 && reserveB > 0, 'BMFlokiLibrary: INSUFFICIENT_LIQUIDITY');
         amountB = amountA.mul(reserveB) / reserveA;
     }
 
@@ -83,7 +83,8 @@ library BMFlokiLibrary {
         uint256 reserveIn,
         uint256 reserveOut
     ) internal pure returns (uint256 amountOut) {
-        require(amountIn > 0, 'BMFlokiV2Library: INSUFFICIENT_INPUT_AMOUNT');
+        require(amountIn > 0, 'BMFlokiLibrary: INSUFFICIENT_INPUT_AMOUNT');
+        require(reserveIn > 0 && reserveOut > 0, 'BMFlokiLibrary: INSUFFICIENT_LIQUIDITY');
         uint256 amountInWithFee = amountIn.mul(997);
         uint256 numerator = amountInWithFee.mul(reserveOut);
         uint256 denominator = reserveIn.mul(1000).add(amountInWithFee);
@@ -106,8 +107,8 @@ library BMFlokiLibrary {
         uint256 reserveIn,
         uint256 reserveOut
     ) internal pure returns (uint256 amountIn) {
-        require(amountOut > 0, 'BMFlokiV2Library: INSUFFICIENT_OUTPUT_AMOUNT');
-        require(reserveIn > 0 && reserveOut > 0, 'BMFlokiV2Library: INSUFFICIENT_LIQUIDITY');
+        require(amountOut > 0, 'BMFlokiLibrary: INSUFFICIENT_OUTPUT_AMOUNT');
+        require(reserveIn > 0 && reserveOut > 0, 'BMFlokiLibrary: INSUFFICIENT_LIQUIDITY');
         uint256 numerator = reserveIn.mul(amountOut).mul(1000);
         uint256 denominator = reserveOut.sub(amountOut).mul(997);
         amountIn = (numerator / denominator).add(1);
@@ -119,7 +120,7 @@ library BMFlokiLibrary {
         uint256 amountIn,
         address[] memory path
     ) internal view returns (uint256[] memory amounts) {
-        require(path.length >= 2, 'BMFlokiV2Library: INVALID_PATH');
+        require(path.length >= 2, 'BMFlokiLibrary: INVALID_PATH');
         amounts = new uint256[](path.length);
         amounts[0] = amountIn;
         for (uint256 i; i < path.length - 1; i++) {
@@ -134,7 +135,7 @@ library BMFlokiLibrary {
         uint256 amountOut,
         address[] memory path
     ) internal view returns (uint256[] memory amounts) {
-        require(path.length >= 2, 'BMFlokiV2Library: INVALID_PATH');
+        require(path.length >= 2, 'BMFlokiLibrary: INVALID_PATH');
         amounts = new uint256[](path.length);
         amounts[amounts.length - 1] = amountOut;
         for (uint256 i = path.length - 1; i > 0; i--) {

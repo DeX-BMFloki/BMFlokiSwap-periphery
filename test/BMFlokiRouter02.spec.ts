@@ -1,4 +1,4 @@
-import chai, { expect } from 'chai'
+import chai, { assert, expect } from 'chai'
 import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 import { Contract } from 'ethers'
 import { BigNumber, bigNumberify } from 'ethers/utils'
@@ -13,6 +13,12 @@ import { ecsign } from 'ethereumjs-util'
 
 chai.use(solidity)
 
+const assertBNArray = (arr1: any[], arr2: any | any[]) => {
+  assert.equal(arr1.length, arr2.length);
+  arr1.forEach((n1, index) => {
+    assert.equal(n1.toString(), arr2[index].toString());
+  });
+};
 const overrides = {
   gasLimit: 9999999
 }
@@ -96,11 +102,7 @@ describe('BMFlokiRouter', () => {
       'BMFlokiLibrary: INVALID_PATH'
     )
     const path = [token0.address, token1.address]
-    try {
-      expect(await router.getAmountsOut(bigNumberify(2), path)).to.eq([bigNumberify(2), bigNumberify(1)])
-    } catch (error) {
-      console.log('error', error)
-    }
+    assertBNArray(await router.getAmountsOut(bigNumberify(2), path), [bigNumberify(2), bigNumberify(1)])
   })
 
   it('getAmountsIn', async () => {
@@ -122,11 +124,7 @@ describe('BMFlokiRouter', () => {
       'BMFlokiLibrary: INVALID_PATH'
     )
     const path = [token0.address, token1.address]
-     try {
-      expect(await router.getAmountsIn(bigNumberify(1), path)).to.deep.equal([bigNumberify(2), bigNumberify(1)])
-    } catch (error) {
-      console.log('error', error)
-    }
+    assertBNArray(await router.getAmountsIn(bigNumberify(1), path), [bigNumberify(2), bigNumberify(1)])
   })
 })
 

@@ -10,7 +10,7 @@ library BMFlokiLibrary {
 
     function checkAndConvertETHToWETH(address token) internal pure returns (address) {
         if (token == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
-            return address(0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270);
+            return address(0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd);
         }
         return token;
     }
@@ -37,7 +37,7 @@ library BMFlokiLibrary {
                             hex'ff',
                             factory,
                             keccak256(abi.encodePacked(token0, token1)),
-                            hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f' // init code hash
+                            hex'fe03f6269c8a8943745fe9def3a1068b99a33a92064f88da6675998ea5131e3e' // init code hash
                         )
                     )
                 )
@@ -85,7 +85,7 @@ library BMFlokiLibrary {
     ) internal pure returns (uint256 amountOut) {
         require(amountIn > 0, 'BMFlokiLibrary: INSUFFICIENT_INPUT_AMOUNT');
         require(reserveIn > 0 && reserveOut > 0, 'BMFlokiLibrary: INSUFFICIENT_LIQUIDITY');
-        uint256 amountInWithFee = amountIn.mul(997);
+        uint256 amountInWithFee = amountIn.mul(998);
         uint256 numerator = amountInWithFee.mul(reserveOut);
         uint256 denominator = reserveIn.mul(1000).add(amountInWithFee);
         amountOut = numerator / denominator;
@@ -110,7 +110,7 @@ library BMFlokiLibrary {
         require(amountOut > 0, 'BMFlokiLibrary: INSUFFICIENT_OUTPUT_AMOUNT');
         require(reserveIn > 0 && reserveOut > 0, 'BMFlokiLibrary: INSUFFICIENT_LIQUIDITY');
         uint256 numerator = reserveIn.mul(amountOut).mul(1000);
-        uint256 denominator = reserveOut.sub(amountOut).mul(997);
+        uint256 denominator = reserveOut.sub(amountOut).mul(998);
         amountIn = (numerator / denominator).add(1);
     }
 

@@ -8,6 +8,8 @@ import { ecsign } from 'ethereumjs-util'
 import { expandTo18Decimals, getApprovalDigest, mineBlock, MINIMUM_LIQUIDITY } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
 
+const FEE_DENOMINATOR = bigNumberify(10).pow(3)
+
 chai.use(solidity)
 
 const overrides = {
@@ -15,7 +17,6 @@ const overrides = {
 }
 
 enum RouterVersion {
-  // UniswapV2Router01 = 'UniswapV2Router01',
   BMFlokiRouter = 'BMFlokiRouter'
 }
 
@@ -46,7 +47,6 @@ describe('BMFlokiRouter', () => {
       WETHPartner = fixture.WETHPartner
       factory = fixture.factoryV2
       router = {
-        // [RouterVersion.UniswapV2Router01]: fixture.router01,
         [RouterVersion.BMFlokiRouter]: fixture.router02
       }[routerVersion as RouterVersion]
       pair = fixture.pair
@@ -305,7 +305,12 @@ describe('BMFlokiRouter', () => {
         const token0Amount = expandTo18Decimals(5)
         const token1Amount = expandTo18Decimals(10)
         const swapAmount = expandTo18Decimals(1)
-        const expectedOutputAmount = bigNumberify('1662497915624478906')
+        const expectedOutputAmount = bigNumberify('1663887962654218073')
+        const amountInWithFee = swapAmount.mul(FEE_DENOMINATOR.sub(2));
+        const numerator = amountInWithFee.mul(token1Amount);
+        const denominator = token0Amount.mul(FEE_DENOMINATOR).add(amountInWithFee);
+        const amountOut = numerator.div(denominator);
+        console.log('amountOut', amountOut.toString())
 
         beforeEach(async () => {
           await addLiquidity(token0Amount, token1Amount)
@@ -331,6 +336,8 @@ describe('BMFlokiRouter', () => {
             .withArgs(token0Amount.add(swapAmount), token1Amount.sub(expectedOutputAmount))
             .to.emit(pair, 'Swap')
             .withArgs(router.address, swapAmount, 0, 0, expectedOutputAmount, wallet.address)
+            console.log('expectedOutputAmount', expectedOutputAmount)
+            console.log('swapAmount', swapAmount)
         })
 
         it('amounts', async () => {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.6.12;
 
-import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
+import 'bmfloki/contracts/interfaces/IBMFlokiFactory.sol';
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
 import './interfaces/IBMFlokiRouter.sol';
@@ -40,8 +40,8 @@ contract BMFlokiRouter is IBMFlokiRouter {
         uint256 amountBMin
     ) internal virtual returns (uint256 amountA, uint256 amountB) {
         // create the pair if it doesn't exist yet
-        if (IUniswapV2Factory(factory).getPair(tokenA, tokenB) == address(0)) {
-            IUniswapV2Factory(factory).createPair(tokenA, tokenB);
+        if (IBMFlokiFactory(factory).getPair(tokenA, tokenB) == address(0)) {
+            IBMFlokiFactory(factory).createPair(tokenA, tokenB);
         }
         (uint256 reserveA, uint256 reserveB) = BMFlokiLibrary.getReserves(factory, tokenA, tokenB);
         if (reserveA == 0 && reserveB == 0) {
@@ -84,7 +84,7 @@ contract BMFlokiRouter is IBMFlokiRouter {
         address pair = BMFlokiLibrary.pairFor(factory, tokenA, tokenB);
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
-        liquidity = IUniswapV2Pair(pair).mint(to);
+        liquidity = IBMFlokiPair(pair).mint(to);
     }
 
     function addLiquidityETH(
@@ -118,7 +118,7 @@ contract BMFlokiRouter is IBMFlokiRouter {
         TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
         IWETH(WETH).deposit{value: amountETH}();
         assert(IWETH(WETH).transfer(pair, amountETH));
-        liquidity = IUniswapV2Pair(pair).mint(to);
+        liquidity = IBMFlokiPair(pair).mint(to);
         // refund dust eth, if any
         if (msg.value > amountETH) TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH);
     }
@@ -134,8 +134,8 @@ contract BMFlokiRouter is IBMFlokiRouter {
         uint256 deadline
     ) public virtual override ensure(deadline) returns (uint256 amountA, uint256 amountB) {
         address pair = BMFlokiLibrary.pairFor(factory, tokenA, tokenB);
-        IUniswapV2Pair(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
-        (uint256 amount0, uint256 amount1) = IUniswapV2Pair(pair).burn(to);
+        IBMFlokiPair(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
+        (uint256 amount0, uint256 amount1) = IBMFlokiPair(pair).burn(to);
         (address token0, ) = BMFlokiLibrary.sortTokens(tokenA, tokenB);
         (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
         require(amountA >= amountAMin, 'BMFlokiRouter: INSUFFICIENT_A_AMOUNT');
@@ -179,7 +179,7 @@ contract BMFlokiRouter is IBMFlokiRouter {
     ) external virtual override returns (uint256 amountA, uint256 amountB) {
         address pair = BMFlokiLibrary.pairFor(factory, tokenA, tokenB);
         uint256 value = approveMax ? uint256(-1) : liquidity;
-        IUniswapV2Pair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        IBMFlokiPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
         (amountA, amountB) = removeLiquidity(tokenA, tokenB, liquidity, amountAMin, amountBMin, to, deadline);
     }
 
@@ -197,7 +197,7 @@ contract BMFlokiRouter is IBMFlokiRouter {
     ) external virtual override returns (uint256 amountToken, uint256 amountETH) {
         address pair = BMFlokiLibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? uint256(-1) : liquidity;
-        IUniswapV2Pair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        IBMFlokiPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
         (amountToken, amountETH) = removeLiquidityETH(token, liquidity, amountTokenMin, amountETHMin, to, deadline);
     }
 
@@ -230,7 +230,7 @@ contract BMFlokiRouter is IBMFlokiRouter {
     ) external virtual override returns (uint256 amountETH) {
         address pair = BMFlokiLibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? uint256(-1) : liquidity;
-        IUniswapV2Pair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        IBMFlokiPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
         amountETH = removeLiquidityETHSupportingFeeOnTransferTokens(
             token,
             liquidity,
@@ -256,12 +256,7 @@ contract BMFlokiRouter is IBMFlokiRouter {
                 ? (uint256(0), amountOut)
                 : (amountOut, uint256(0));
             address to = i < path.length - 2 ? BMFlokiLibrary.pairFor(factory, output, path[i + 2]) : _to;
-            IUniswapV2Pair(BMFlokiLibrary.pairFor(factory, input, output)).swap(
-                amount0Out,
-                amount1Out,
-                to,
-                new bytes(0)
-            );
+            IBMFlokiPair(BMFlokiLibrary.pairFor(factory, input, output)).swap(amount0Out, amount1Out, to, new bytes(0));
         }
     }
 
@@ -379,7 +374,7 @@ contract BMFlokiRouter is IBMFlokiRouter {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0, ) = BMFlokiLibrary.sortTokens(input, output);
-            IUniswapV2Pair pair = IUniswapV2Pair(BMFlokiLibrary.pairFor(factory, input, output));
+            IBMFlokiPair pair = IBMFlokiPair(BMFlokiLibrary.pairFor(factory, input, output));
             uint256 amountInput;
             uint256 amountOutput;
             {
@@ -389,7 +384,12 @@ contract BMFlokiRouter is IBMFlokiRouter {
                     ? (reserve0, reserve1)
                     : (reserve1, reserve0);
                 amountInput = IERC20(input).balanceOf(address(pair)).sub(reserveInput);
-                amountOutput = BMFlokiLibrary.getAmountOut(amountInput, reserveInput, reserveOutput);
+                amountOutput = BMFlokiLibrary.getAmountOut(
+                    amountInput,
+                    reserveInput,
+                    reserveOutput,
+                    IBMFlokiFactory(factory).swapFee()
+                );
             }
             (uint256 amount0Out, uint256 amount1Out) = input == token0
                 ? (uint256(0), amountOutput)
@@ -471,17 +471,19 @@ contract BMFlokiRouter is IBMFlokiRouter {
     function getAmountOut(
         uint256 amountIn,
         uint256 reserveIn,
-        uint256 reserveOut
+        uint256 reserveOut,
+        uint32 swapFee
     ) public pure virtual override returns (uint256 amountOut) {
-        return BMFlokiLibrary.getAmountOut(amountIn, reserveIn, reserveOut);
+        return BMFlokiLibrary.getAmountOut(amountIn, reserveIn, reserveOut, swapFee);
     }
 
     function getAmountIn(
         uint256 amountOut,
         uint256 reserveIn,
-        uint256 reserveOut
+        uint256 reserveOut,
+        uint32 swapFee
     ) public pure virtual override returns (uint256 amountIn) {
-        return BMFlokiLibrary.getAmountIn(amountOut, reserveIn, reserveOut);
+        return BMFlokiLibrary.getAmountIn(amountOut, reserveIn, reserveOut, swapFee);
     }
 
     function getAmountsOut(uint256 amountIn, address[] memory path)
